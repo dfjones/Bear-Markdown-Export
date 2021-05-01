@@ -45,7 +45,7 @@ hide_tags_in_comment_block = True  # Hide tags in HTML comments: `<!-- #mytag --
 # The following two lists are more or less mutually exclusive, so use only one of them.
 # (You can use both if you have some nested tags where that makes sense)
 # Also, they only work if `make_tag_folders = True`.
-only_export_these_tags = []  # Leave this list empty for all notes! See below for sample
+only_export_these_tags = ['hacking', 'conferences-and-talks', 'blogging', 'archive', 'learning']  # Leave this list empty for all notes! See below for sample
 # only_export_these_tags = ['bear/github', 'writings'] 
 
 export_as_textbundles = False  # Exports as Textbundles with images included
@@ -109,6 +109,8 @@ log_file = os.path.join(sync_backup, 'bear_export_sync_log.txt')
 # Paths used in image exports:
 bear_image_path = os.path.join(HOME,
     'Library/Group Containers/9K33E3U3T4.net.shinyfrog.bear/Application Data/Local Files/Note Images')
+bear_file_path = os.path.join(HOME,
+    'Library/Group Containers/9K33E3U3T4.net.shinyfrog.bear/Application Data/Local Files/Note Files')
 assets_path = parsed_args.get("images") if parsed_args.get("images") else os.path.join(export_path, 'BearImages')
 
 sync_ts = '.sync-time.log'
@@ -305,7 +307,9 @@ def process_image_links(md_text, filepath):
     root = filepath.replace(temp_path, '')
     level = len(root.split('/')) - 2
     parent = '../' * level
-    md_text = re.sub(r'\[image:(.+?)\]', r'![](' + parent + r'BearImages/\1)', md_text)
+    md_text = re.sub(r'\[image:(.+?)\]', r'![[' + parent + r'BearImages/\1]]', md_text)
+    # process file attachments in the same way as images
+    md_text = re.sub(r'\[file:(.+?)\]', r'![[' + parent + r'BearImages/\1]]', md_text)
     return md_text
 
 
@@ -328,6 +332,8 @@ def copy_bear_images():
     # Image files copied to a common image repository
     subprocess.call(['rsync', '-r', '-t', '--delete', 
                     bear_image_path + "/", assets_path])
+    subprocess.call(['rsync', '-r', '-t', 
+                    bear_file_path + "/", assets_path])
 
 
 def write_time_stamp():
